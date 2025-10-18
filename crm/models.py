@@ -14,7 +14,7 @@ class Customer(models.Model):
         return f"{self.name} <{self.email}>"
 
 class Product(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
     stock = models.PositiveIntegerField(default=0)
 
@@ -42,3 +42,4 @@ class Order(models.Model):
         # If saved with products already set (M2M set happens after initial save),
         # we won't compute here — we'll ensure compute after m2m assignment in mutation.
         super().save(*args, **kwargs)
+
