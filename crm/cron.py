@@ -1,9 +1,11 @@
 import os
 from datetime import datetime
-import requests
-import json
+from gql import gql, Client
+from gql.transport.requests import RequestsHTTPTransport
 
-# Logs a heartbeat every 5 minutes
+# -------------------------
+# Log CRM heartbeat
+# -------------------------
 def log_crm_heartbeat():
     """
     Logs a message like:
@@ -17,21 +19,10 @@ def log_crm_heartbeat():
     with open(log_path, "a") as log_file:
         log_file.write(message)
 
-    # Optionally check GraphQL endpoint responsiveness
-    try:
-        response = requests.post(
-            "http://localhost:8000/graphql",
-            json={"query": "{ hello }"}
-        )
-        if response.status_code == 200:
-            print(f"[{timestamp}] Heartbeat OK — GraphQL endpoint responded.")
-        else:
-            print(f"[{timestamp}] Warning — GraphQL returned {response.status_code}.")
-    except Exception as e:
-        print(f"[{timestamp}] Heartbeat failed: {e}")
 
-
-# Auto restock low-stock products (used by CRONJOBS)
+# -------------------------
+# Update low-stock products using GraphQL mutation
+# -------------------------
 def update_low_stock():
     """
     Executes the UpdateLowStockProducts GraphQL mutation and logs updates
@@ -40,29 +31,36 @@ def update_low_stock():
     log_path = "/tmp/low_stock_updates_log.txt"
     timestamp = datetime.now().strftime("%d/%m/%Y-%H:%M:%S")
 
-    query = """
-    mutation {
-      updateLowStockProducts {
-        success
-        message
-        updatedProducts {
-          id
-          name
-          stock
+    # Configure transport and client
+    transport = RequestsHTTPTransport(
+        url="http://localhost:8000/graphql",
+        verify=False,
+        retries=3,
+    )
+    client = Client(transport=transport, fetch_schema_from_transport=True)
+
+    # GraphQL mutation
+    query = gql(
+        """
+        mutation {
+          updateLowStockProducts {
+            success
+            message
+            updatedProducts {
+              id
+              name
+              stock
+            }
+          }
         }
-      }
-    }
-    """
+        """
+    )
 
     try:
-        response = requests.post(
-            "http://localhost:8000/graphql",
-            json={"query": query}
-        )
-
-        data = response.json().get("data", {}).get("updateLowStockProducts", {})
-        updated_products = data.get("updatedProducts", [])
+        result = client.execute(query)
+        data = result.get("updateLowStockProducts", {})
         message = data.get("message", "No response message.")
+        updated_products = data.get("updatedProducts", [])
 
         with open(log_path, "a") as log_file:
             log_file.write(f"\n{timestamp} - {message}\n")
