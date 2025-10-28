@@ -9,7 +9,7 @@ import graphene
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 
-from crm.models import Customer, Product, Order
+from crm.models import Product, Customer, Order
 from crm.filters import CustomerFilter, ProductFilter, OrderFilter
 
 # -----------------------------
@@ -283,3 +283,4 @@ class Mutation(graphene.ObjectType):
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
+
