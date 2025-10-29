@@ -1,5 +1,6 @@
 import os
 import logging
+import requests
 from datetime import datetime
 from gql import gql, Client
 from gql.transport.requests import RequestsHTTPTransport
@@ -66,4 +67,5 @@ def generate_crm_report():
     except Exception as e:
         logging.error(f"Error generating CRM report: {e}")
         print(f"Error generating CRM report: {e}")
+
 # Schedule this task in Celery Beat to run every Monday at 6:00 AM
