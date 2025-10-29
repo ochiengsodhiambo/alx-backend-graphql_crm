@@ -4,3 +4,9 @@ django-filter
 django-crontab
 gql
 requests
+celery
+django-celery-beat
+redis
+requests-toolbelt
+gql[requests]
+
